@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="referrer" content="origin" />
-    <title>Blogger Movie Poster Pro — Series Edition</title>
+    <title>Blogger Movie Poster Pro</title>
     <script src="https://accounts.google.com/gsi/client"></script>
     <style>
         /* ─────────── RESET & BASE ─────────── */
@@ -349,6 +349,7 @@
             padding: 12px;
             background: var(--bg-secondary);
         }
+        /* Checkbox overlay */
         .movie-card .checkbox-overlay {
             position: absolute;
             top: 8px;
@@ -755,11 +756,6 @@
         .template-editor .preview-btn {
             margin-top: 8px;
         }
-        .template-editor .info-note {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-top: 6px;
-        }
         /* ─────────── MANUAL POST FORM ─────────── */
         .manual-form {
             background: var(--bg-secondary);
@@ -796,8 +792,7 @@
             gap: 4px;
         }
         .manual-form input,
-        .manual-form textarea,
-        .manual-form select {
+        .manual-form textarea {
             background: var(--bg-primary);
             border: 1px solid var(--border);
             border-radius: 8px;
@@ -808,8 +803,7 @@
             transition: var(--transition);
         }
         .manual-form input:focus,
-        .manual-form textarea:focus,
-        .manual-form select:focus {
+        .manual-form textarea:focus {
             border-color: var(--accent);
         }
         .manual-form textarea {
@@ -1055,7 +1049,7 @@
     <!-- ═══════════ HEADER ═══════════ -->
     <header class="header">
         <div class="container">
-            <div class="logo">🎬 <span>Blogger</span>MoviePoster <small>· Series Edition</small></div>
+            <div class="logo">🎬 <span>Blogger</span>MoviePoster <small>· Pro</small></div>
             <div class="header-actions">
                 <span class="blogger-status" id="bloggerStatus">
                     <span class="dot offline" id="statusDot"></span>
@@ -1084,7 +1078,7 @@
                 <span style="font-size:12px;color:var(--text-muted);" id="blogStatus"></span>
             </div>
             <div class="panel-row" style="margin-top:6px;">
-                <label style="font-size:12px;color:var(--text-muted);">💡 Select movies/series, then click "Post Selected"</label>
+                <label style="font-size:12px;color:var(--text-muted);">💡 Select movies below, then click "Post Selected"</label>
             </div>
         </div>
 
@@ -1111,7 +1105,7 @@
             </div>
             <div class="toolbar-right">
                 <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="Search movies/series..." />
+                    <input type="text" id="searchInput" placeholder="Search movies..." />
                     <button id="searchBtn">Go</button>
                 </div>
                 <button class="btn btn-secondary btn-sm" id="clearSearchBtn">✕</button>
@@ -1169,12 +1163,9 @@
                 </div>
             </div>
             <textarea id="templateTextarea" spellcheck="false"></textarea>
-            <div class="info-note">
-                💡 <strong>TV series</strong> automatically use a special layout with episode data JSON and a lazyload iframe.
-                Placeholders: <code>{title}</code> <code>{year}</code> <code>{description}</code> <code>{tags}</code> <code>{poster}</code> <code>{embed}</code> <code>{imdb}</code> <code>{episode_data}</code>
-            </div>
             <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;">
                 <button class="btn btn-secondary btn-sm preview-btn" id="previewTemplateBtn">👁️ Preview</button>
+                <span style="font-size:11px;color:var(--text-muted);">Available: <code>{title}</code> <code>{year}</code> <code>{description}</code> <code>{tags}</code> <code>{poster}</code> <code>{embed}</code> <code>{imdb}</code></span>
             </div>
         </div>
 
@@ -1187,12 +1178,6 @@
             <form id="manualPostForm" class="form-grid">
                 <label>Title *<input type="text" id="manualTitle" required /></label>
                 <label>Year <input type="number" id="manualYear" /></label>
-                <label>Type
-                    <select id="manualType">
-                        <option value="movie">🎬 Movie</option>
-                        <option value="tv">📺 TV Series</option>
-                    </select>
-                </label>
                 <label class="full">Description <textarea id="manualDesc" rows="2"></textarea></label>
                 <label>Tags (comma separated) <input type="text" id="manualTags" placeholder="action, drama" /></label>
                 <label>Poster URL <input type="url" id="manualPoster" placeholder="https://..." /></label>
@@ -1232,7 +1217,7 @@
     <!-- ═══════════ FOOTER ═══════════ -->
     <footer class="footer">
         <div class="container">
-            <p>🎥 <strong>Blogger Movie Poster Pro — Series Edition</strong> — powered by <a href="https://www.themoviedb.org/" target="_blank">TMDB</a> &amp; <a href="https://developers.google.com/blogger" target="_blank">Blogger API</a>.</p>
+            <p>🎥 <strong>Blogger Movie Poster Pro</strong> — powered by <a href="https://www.themoviedb.org/" target="_blank">TMDB</a> &amp; <a href="https://developers.google.com/blogger" target="_blank">Blogger API</a>. Ad‑free embed via vidsrcme.ru.</p>
         </div>
     </footer>
 
@@ -1315,7 +1300,6 @@
         const manualForm = document.getElementById('manualPostForm');
         const manualTitle = document.getElementById('manualTitle');
         const manualYear = document.getElementById('manualYear');
-        const manualType = document.getElementById('manualType');
         const manualDesc = document.getElementById('manualDesc');
         const manualTags = document.getElementById('manualTags');
         const manualPoster = document.getElementById('manualPoster');
@@ -1352,77 +1336,193 @@
         </div>`;
         }
 
-        // Default series template (used only if user's template doesn't contain {episode_data})
-        function seriesTemplateDefault() {
-            return `<div class="separator" style="display:none">
-            <img src="{poster_url}" width="400"/>
-        </div>
-
-        <div style="font-size:16px;line-height:1.8;color:#e2e8f0;">
-            <p><strong>🎬 {title}</strong> ({year})</p>
-            <p>{description}</p>
-            <p><strong>🏷️ Tags:</strong> {tags}</p>
-            <p><small>IMDb: {imdb}</small></p>
-        </div>
-
-        <script type="application/json" id="episodeData">
-        {episode_data}
-        </script>
-
-        <iframe class="lazyload"
-          src="{embed}"
-          data-src="{embed}"
-          allow="autoplay; encrypted-media"
-          width="100%"
-          height="100%"
-          allowfullscreen>
-        </iframe>`;
+        // ═══════════════════════════════════════════════════════════════
+        //  TOAST
+        // ═══════════════════════════════════════════════════════════════
+        function showToast(msg, type = 'info', duration = 4000) {
+            const el = document.createElement('div');
+            el.className = 'toast';
+            if (type === 'error') el.classList.add('error');
+            if (type === 'success') el.classList.add('success');
+            el.textContent = msg;
+            toastContainer.appendChild(el);
+            setTimeout(() => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(10px)';
+                setTimeout(() => el.remove(), 300);
+            }, duration);
         }
 
         // ═══════════════════════════════════════════════════════════════
-        //  RENDER TEMPLATE (customizable for series if {episode_data} is present)
+        //  GOOGLE OAUTH (Blogger)
         // ═══════════════════════════════════════════════════════════════
-        function renderTemplate(movie, template) {
-            const isSeries = movie.media_type === 'tv' || (movie.type === 'tv') || (movie.isSeries === true);
-            const poster = movie.poster_path ? (movie.poster_path.startsWith('http') ? movie.poster_path : TMDB_IMAGE + movie.poster_path) : (movie.poster || '');
-            const embedUrl = movie.imdb_id || movie.imdbId ? `${VIDSRC_BASE}/${movie.imdb_id || movie.imdbId}` : '';
-            const year = movie.release_date ? movie.release_date.split('-')[0] : (movie.first_air_date ? movie.first_air_date.split('-')[0] : (movie.year || ''));
-            const tags = movie.tags || (movie.genre_names ? movie.genre_names.join(', ') : '');
-            const description = movie.overview || movie.description || '';
+        let tokenClient = null;
 
-            if (isSeries) {
-                // If the user's template contains the episode_data placeholder, use it; otherwise fallback to default series layout
-                const useCustomTemplate = template.includes('{episode_data}');
-                const seriesTpl = useCustomTemplate ? template : seriesTemplateDefault();
-                const episodeData = JSON.stringify([{ "ep": 1, "src": embedUrl }]);
-
-                return seriesTpl
-                    .replace(/\{poster_url\}/g, poster) // raw URL for hidden separator
-                    .replace(/\{title\}/g, movie.title || movie.name || 'Untitled')
-                    .replace(/\{year\}/g, year)
-                    .replace(/\{description\}/g, description.replace(/\n/g, '<br>'))
-                    .replace(/\{tags\}/g, tags)
-                    .replace(/\{imdb\}/g, movie.imdb_id || movie.imdbId || '')
-                    .replace(/\{embed\}/g, embedUrl)
-                    .replace(/\{episode_data\}/g, episodeData);
-            } else {
-                // Movie: always use the user's template
-                const posterHtml = poster ? `<img src="${poster}" alt="${movie.title}" style="max-width:100%;border-radius:8px;max-height:400px;" />` : '';
-                const embedHtml = embedUrl ? `<iframe src="${embedUrl}" referrerpolicy="origin" style="width:100%;aspect-ratio:16/9;border:0;border-radius:8px;" allowfullscreen></iframe>` : '';
-                return template
-                    .replace(/\{title\}/g, movie.title || movie.name || 'Untitled')
-                    .replace(/\{year\}/g, year)
-                    .replace(/\{description\}/g, description.replace(/\n/g, '<br>'))
-                    .replace(/\{tags\}/g, tags)
-                    .replace(/\{poster\}/g, posterHtml)
-                    .replace(/\{embed\}/g, embedHtml)
-                    .replace(/\{imdb\}/g, movie.imdb_id || movie.imdbId || '');
+        function initOAuth() {
+            if (!CLIENT_ID || CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com') {
+                showToast('⚠️ Set your Google Client ID in the script.', 'error');
+                return;
+            }
+            try {
+                tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: CLIENT_ID,
+                    scope: 'https://www.googleapis.com/auth/blogger',
+                    callback: (resp) => {
+                        if (resp.error) {
+                            showToast('Auth error: ' + resp.error, 'error');
+                            return;
+                        }
+                        accessToken = resp.access_token;
+                        localStorage.setItem('bloggerToken', accessToken);
+                        updateAuthUI(true);
+                        fetchBloggerInfo();
+                        showToast('✅ Signed in to Blogger', 'success');
+                    },
+                });
+            } catch (e) {
+                console.error(e);
             }
         }
 
+        function signIn() {
+            if (!tokenClient) initOAuth();
+            if (tokenClient) tokenClient.requestAccessToken({ prompt: 'consent' });
+        }
+
+        function signOutUser() {
+            accessToken = null;
+            localStorage.removeItem('bloggerToken');
+            bloggerUser = null;
+            bloggerBlogs = [];
+            updateAuthUI(false);
+            showToast('Signed out', 'info');
+        }
+
+        function updateAuthUI(isSignedIn) {
+            if (isSignedIn && accessToken) {
+                loginBtn.style.display = 'none';
+                logoutBtn.style.display = 'inline-block';
+                statusDot.className = 'dot online';
+                statusLabel.textContent = 'Signed in';
+                if (bloggerUser) {
+                    userName.textContent = bloggerUser.displayName || 'Blogger User';
+                    userAvatar.src = bloggerUser.picture || '';
+                }
+            } else {
+                loginBtn.style.display = 'inline-block';
+                logoutBtn.style.display = 'none';
+                statusDot.className = 'dot offline';
+                statusLabel.textContent = 'Not signed in';
+                userName.textContent = 'Guest';
+                userAvatar.src = '';
+                blogSelect.innerHTML = '<option value="">— Select blog —</option>';
+            }
+        }
+
+        // Restore token
+        const savedToken = localStorage.getItem('bloggerToken');
+        if (savedToken) {
+            accessToken = savedToken;
+            updateAuthUI(true);
+            // fetch user info after a moment
+            setTimeout(fetchBloggerInfo, 500);
+        } else {
+            updateAuthUI(false);
+        }
+
+        loginBtn.addEventListener('click', signIn);
+        logoutBtn.addEventListener('click', signOutUser);
+
         // ═══════════════════════════════════════════════════════════════
-        //  POST TO BLOGGER
+        //  BLOGGER API
         // ═══════════════════════════════════════════════════════════════
+        async function fetchBloggerInfo() {
+            if (!accessToken) return;
+            try {
+                // Get user info
+                const userResp = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+                    headers: { 'Authorization': 'Bearer ' + accessToken }
+                });
+                const userData = await userResp.json();
+                if (userData.id) {
+                    bloggerUser = userData;
+                    userName.textContent = userData.name || 'Blogger User';
+                    userAvatar.src = userData.picture || '';
+                    updateAuthUI(true);
+                }
+
+                // Get blogs
+                const blogsResp = await fetch('https://www.googleapis.com/blogger/v3/users/self/blogs', {
+                    headers: { 'Authorization': 'Bearer ' + accessToken }
+                });
+                const blogsData = await blogsResp.json();
+                if (blogsData.items && blogsData.items.length) {
+                    bloggerBlogs = blogsData.items;
+                    blogSelect.innerHTML = '<option value="">— Select blog —</option>' +
+                        blogsData.items.map(b =>
+                            `<option value="${b.id}" ${b.id === currentBlogId ? 'selected' : ''}>${b.name}</option>`
+                        ).join('');
+                    if (!currentBlogId && blogsData.items.length) {
+                        currentBlogId = blogsData.items[0].id;
+                        localStorage.setItem('blogId', currentBlogId);
+                        blogSelect.value = currentBlogId;
+                    }
+                    blogStatus.textContent = `📚 ${blogsData.items.length} blog(s) found`;
+                    showToast(`✅ Found ${blogsData.items.length} blog(s)`, 'success');
+                } else {
+                    blogStatus.textContent = '⚠️ No blogs found for this account';
+                    showToast('No blogs found for this account.', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                blogStatus.textContent = '❌ Error fetching blogs';
+                showToast('Error fetching blogs: ' + err.message, 'error');
+            }
+        }
+
+        blogSelect.addEventListener('change', () => {
+            currentBlogId = blogSelect.value;
+            localStorage.setItem('blogId', currentBlogId);
+            if (currentBlogId) {
+                showToast('Blog selected: ' + blogSelect.options[blogSelect.selectedIndex]?.text, 'success');
+            }
+        });
+
+        refreshBlogsBtn.addEventListener('click', () => {
+            if (!accessToken) { showToast('Please sign in first.', 'error'); return; }
+            fetchBloggerInfo();
+        });
+
+        // ═══════════════════════════════════════════════════════════════
+        //  POST TO BLOGGER (with template)
+        // ═══════════════════════════════════════════════════════════════
+        function renderTemplate(movie, template) {
+            const poster = movie.poster_path ? (movie.poster_path.startsWith('http') ? movie.poster_path : TMDB_IMAGE +
+                    movie.poster_path) : (movie.poster || '');
+            const embedUrl = movie.imdb_id || movie.imdbId ? `${VIDSRC_BASE}/${movie.imdb_id || movie.imdbId}` : '';
+            const year = movie.release_date ? movie.release_date.split('-')[0] : (movie.first_air_date ? movie
+                .first_air_date.split('-')[0] : (movie.year || ''));
+            const tags = movie.tags || (movie.genre_names ? movie.genre_names.join(', ') : '');
+
+            const posterHtml = poster ?
+                `<img src="${poster}" alt="${movie.title}" style="max-width:100%;border-radius:8px;max-height:400px;" />` :
+                '';
+            const embedHtml = embedUrl ?
+                `<iframe src="${embedUrl}" referrerpolicy="origin" style="width:100%;aspect-ratio:16/9;border:0;border-radius:8px;" allowfullscreen></iframe>` :
+                '';
+
+            let content = template
+                .replace(/\{title\}/g, movie.title || movie.name || 'Untitled')
+                .replace(/\{year\}/g, year || '')
+                .replace(/\{description\}/g, (movie.overview || movie.description || '').replace(/\n/g, '<br>'))
+                .replace(/\{tags\}/g, tags || '')
+                .replace(/\{poster\}/g, posterHtml)
+                .replace(/\{embed\}/g, embedHtml)
+                .replace(/\{imdb\}/g, movie.imdb_id || movie.imdbId || '');
+
+            return content;
+        }
+
         async function postToBlogger(movie) {
             if (!accessToken) { throw new Error('Not signed in'); }
             if (!currentBlogId) { throw new Error('No blog selected'); }
@@ -1455,9 +1555,724 @@
             return await resp.json();
         }
 
-        // ... (rest of the script remains unchanged, including TMDB fetch, UI interactions, etc.)
-        // For brevity, I've included the full corrected file above. The remaining JavaScript continues identically
-        // to the original, except for the changes highlighted in the renderTemplate function.
+        // ═══════════════════════════════════════════════════════════════
+        //  AI CONTENT GENERATOR (template-based with variety)
+        // ═══════════════════════════════════════════════════════════════
+        function generateAIContent(movie) {
+            const title = movie.title || movie.name || 'Untitled';
+            const year = movie.release_date ? movie.release_date.split('-')[0] : (movie.first_air_date ? movie.first_air_date
+                .split('-')[0] : '');
+            const overview = movie.overview || movie.description || 'A captivating film.';
+            const tags = movie.tags || (movie.genre_names ? movie.genre_names.join(', ') : '');
+
+            // Generate SEO-friendly content with variety
+            const intros = [
+                `"${title}" (${year}) is a must-watch cinematic experience that captivates audiences with its compelling narrative and stunning visuals.`,
+                `Experience the magic of "${title}" (${year}), a film that masterfully blends drama, action, and emotion into an unforgettable journey.`,
+                `"${title}" (${year}) stands as a remarkable achievement in filmmaking, delivering a powerful story that resonates with viewers long after the credits roll.`,
+                `Get ready for an extraordinary ride with "${title}" (${year}). This film has it all – gripping performances, breathtaking cinematography, and a story that keeps you on the edge of your seat.`,
+                `"${title}" (${year}) is the talk of the town – a brilliant piece of cinema that showcases the best of storytelling and visual artistry.`
+            ];
+
+            const intro = intros[Math.floor(Math.random() * intros.length)];
+
+            const outros = [
+                `Don't miss out on this cinematic gem. Watch "${title}" now and discover why it's being hailed as one of the best films of the year.`,
+                `Whether you're a fan of ${tags || 'films'} or just looking for something new to watch, "${title}" is guaranteed to entertain and inspire.`,
+                `Add "${title}" to your watchlist today – it's a film that truly deserves your attention.`,
+                `From its captivating performances to its stunning visuals, "${title}" is a film that will leave you wanting more.`,
+                `Experience the phenomenon that is "${title}" – a film that redefines what cinema can be.`
+            ];
+
+            const outro = outros[Math.floor(Math.random() * outros.length)];
+
+            const tagText = tags ? `\n\n🏷️ <strong>Tags:</strong> ${tags}` : '';
+
+            return `${intro}\n\n${overview}\n\n${outro}${tagText}`;
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        //  TMDB API HELPERS
+        // ═══════════════════════════════════════════════════════════════
+        function buildUrl(endpoint, extraParams = {}) {
+            const url = new URL(TMDB_BASE + endpoint);
+            url.searchParams.set('api_key', TMDB_API_KEY);
+            url.searchParams.set('language', 'en-US');
+            url.searchParams.set('page', currentPage);
+            for (const [k, v] of Object.entries(extraParams)) {
+                url.searchParams.set(k, v);
+            }
+            return url.toString();
+        }
+
+        async function fetchFromTMDB(endpoint, extraParams = {}) {
+            const url = buildUrl(endpoint, extraParams);
+            const resp = await fetch(url);
+            if (!resp.ok) throw new Error(`TMDB error: ${resp.status}`);
+            return resp.json();
+        }
+
+        async function fetchExternalIds(tmdbId, type) {
+            const typeMap = { movie: 'movie', tv: 'tv' };
+            const url = `${TMDB_BASE}/${typeMap[type] || 'movie'}/${tmdbId}/external_ids?api_key=${TMDB_API_KEY}`;
+            const resp = await fetch(url);
+            if (!resp.ok) return null;
+            return resp.json();
+        }
+
+        function getEmbedUrl(imdbId) {
+            if (!imdbId) return null;
+            return `${VIDSRC_BASE}/${imdbId}`;
+        }
+
+        function getPosterUrl(path) {
+            if (!path) return null;
+            return TMDB_IMAGE + path;
+        }
+
+        async function enrichItems(items, type) {
+            const enriched = [];
+            for (const item of items) {
+                try {
+                    let imdbId = item.imdb_id || null;
+                    if (!imdbId && (type === 'movie' || type === 'tv')) {
+                        const ids = await fetchExternalIds(item.id, type);
+                        if (ids && ids.imdb_id) imdbId = ids.imdb_id;
+                    }
+                    const embedUrl = imdbId ? getEmbedUrl(imdbId) : null;
+                    enriched.push({
+                        ...item,
+                        imdb_id: imdbId,
+                        embed_url: embedUrl,
+                        media_type: type,
+                        poster_path: item.poster_path,
+                        backdrop_path: item.backdrop_path,
+                        title: item.title || item.name || 'Untitled',
+                        release_date: item.release_date || item.first_air_date || '',
+                        vote_average: item.vote_average || 0,
+                        vote_count: item.vote_count || 0,
+                        overview: item.overview || 'No description available.',
+                        genre_ids: item.genre_ids || [],
+                        genre_names: item.genre_names || [],
+                        year: item.release_date ? item.release_date.split('-')[0] : (item.first_air_date ? item
+                            .first_air_date.split('-')[0] : ''),
+                    });
+                } catch (_) {
+                    enriched.push({
+                        ...item,
+                        imdb_id: null,
+                        embed_url: null,
+                        media_type: type,
+                        title: item.title || item.name || 'Untitled',
+                        release_date: item.release_date || item.first_air_date || '',
+                        vote_average: item.vote_average || 0,
+                        overview: item.overview || 'No description available.',
+                        genre_ids: item.genre_ids || [],
+                        genre_names: item.genre_names || [],
+                        year: item.release_date ? item.release_date.split('-')[0] : (item.first_air_date ? item
+                            .first_air_date.split('-')[0] : ''),
+                    });
+                }
+            }
+            return enriched;
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        //  LOAD CATEGORY
+        // ═══════════════════════════════════════════════════════════════
+        const categories = {
+            trending: { label: '🔥 Trending', endpoint: '/trending/movie/week', type: 'movie' },
+            now_playing: { label: '🍿 Now Playing', endpoint: '/movie/now_playing', type: 'movie' },
+            top_rated: { label: '⭐ Top Rated', endpoint: '/movie/top_rated', type: 'movie' },
+            popular: { label: '📈 Popular', endpoint: '/movie/popular', type: 'movie' },
+            tv: { label: '📺 TV Series', endpoint: '/tv/popular', type: 'tv' },
+            old: { label: '🕰️ Old', endpoint: '/discover/movie', type: 'movie', params: { 'primary_release_date.lte': '1990-12-31',
+                    'sort_by': 'release_date.asc' } },
+        };
+
+        async function loadCategory(categoryKey, page = 1, query = '') {
+            if (isLoading) return;
+            isLoading = true;
+
+            const cat = categories[categoryKey];
+            if (!cat) { isLoading = false; return; }
+
+            currentCategory = categoryKey;
+            currentPage = page;
+            searchQuery = query;
+
+            // Update tabs
+            categoryTabs.querySelectorAll('button').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.cat === categoryKey);
+            });
+
+            // Clear selection
+            selectedMovies.clear();
+            updateSelectionUI();
+
+            try {
+                let data;
+                if (query) {
+                    const searchType = cat.type === 'tv' ? 'tv' : 'movie';
+                    const resp = await fetch(
+                        `${TMDB_BASE}/search/${searchType}?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&page=${page}&language=en-US`
+                        );
+                    if (!resp.ok) throw new Error('Search failed');
+                    data = await resp.json();
+                } else if (categoryKey === 'old') {
+                    data = await fetchFromTMDB(cat.endpoint, { ...cat.params, page });
+                } else {
+                    data = await fetchFromTMDB(cat.endpoint, { page });
+                }
+
+                const results = data.results || [];
+                totalPages = data.total_pages || 1;
+                currentMovies = await enrichItems(results, cat.type);
+
+                renderMovies(currentMovies);
+                renderPagination();
+
+                if (currentMovies.length === 0) {
+                    grid.innerHTML = `<div class="empty-state"><h3>😕 No results found</h3><p>Try a different category or search term.</p></div>`;
+                }
+
+            } catch (err) {
+                console.error(err);
+                grid.innerHTML =
+                    `<div class="empty-state"><h3>⚠️ Error</h3><p>${err.message || 'Failed to load movies.'}</p></div>`;
+                showToast('Error loading: ' + err.message, 'error');
+            }
+
+            isLoading = false;
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        //  RENDER MOVIES
+        // ═══════════════════════════════════════════════════════════════
+        function renderMovies(movies) {
+            if (!movies || movies.length === 0) {
+                grid.innerHTML = `<div class="empty-state"><h3>😕 No movies</h3></div>`;
+                return;
+            }
+
+            const html = movies.map((item, index) => {
+                const poster = item.poster_path ? getPosterUrl(item.poster_path) : null;
+                const year = item.year || '—';
+                const rating = item.vote_average ? item.vote_average.toFixed(1) : '—';
+                const title = item.title || item.name || 'Untitled';
+                const hasEmbed = !!item.imdb_id;
+                const isSelected = selectedMovies.has(index);
+
+                return `
+                    <div class="movie-card ${isSelected ? 'selected' : ''}" data-index="${index}">
+                        <div class="poster-wrap" onclick="openModalByIndex(${index})">
+                            ${poster ? `<img src="${poster}" alt="${title}" loading="lazy" />` : `<div class="placeholder">🎬<br>${title}</div>`}
+                            <div class="checkbox-overlay show" onclick="event.stopPropagation();">
+                                <input type="checkbox" ${isSelected ? 'checked' : ''} data-index="${index}" />
+                                <label>Select</label>
+                            </div>
+                            <div class="badge-top">${rating !== '—' ? '⭐ ' + rating : '✦'}</div>
+                            <div class="badge-year">${year}</div>
+                            <div class="badge-embed ${hasEmbed ? 'available' : 'unavailable'}">${hasEmbed ? '● embed' : '○ no embed'}</div>
+                        </div>
+                        <div class="info">
+                            <div class="title">${title}</div>
+                            <div class="meta">
+                                <span>${year}</span>
+                                ${item.media_type === 'tv' ? '<span>📺 TV</span>' : ''}
+                                <span class="rating">⭐ ${rating}</span>
+                            </div>
+                            <button class="post-btn" onclick="postSingleMovie(${index})">📝 Post this</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            grid.innerHTML = html;
+
+            // Attach checkbox events
+            grid.querySelectorAll('.checkbox-overlay input[type="checkbox"]').forEach(cb => {
+                cb.addEventListener('change', (e) => {
+                    e.stopPropagation();
+                    const idx = parseInt(cb.dataset.index);
+                    if (cb.checked) {
+                        selectedMovies.set(idx, currentMovies[idx]);
+                    } else {
+                        selectedMovies.delete(idx);
+                    }
+                    updateSelectionUI();
+                    // Update card highlight
+                    const card = cb.closest('.movie-card');
+                    if (card) card.classList.toggle('selected', cb.checked);
+                });
+            });
+
+            updateSelectionUI();
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        //  SELECTION UI
+        // ═══════════════════════════════════════════════════════════════
+        function updateSelectionUI() {
+            const count = selectedMovies.size;
+            selectedCount.textContent = `${count} selected`;
+            selectAllCheckbox.checked = count > 0 && count === currentMovies.length;
+            // Update checkbox states
+            grid.querySelectorAll('.checkbox-overlay input[type="checkbox"]').forEach(cb => {
+                const idx = parseInt(cb.dataset.index);
+                cb.checked = selectedMovies.has(idx);
+                const card = cb.closest('.movie-card');
+                if (card) card.classList.toggle('selected', cb.checked);
+            });
+        }
+
+        selectAllCheckbox.addEventListener('change', () => {
+            const checked = selectAllCheckbox.checked;
+            currentMovies.forEach((_, idx) => {
+                if (checked) {
+                    selectedMovies.set(idx, currentMovies[idx]);
+                } else {
+                    selectedMovies.delete(idx);
+                }
+            });
+            updateSelectionUI();
+            // Update all checkboxes and cards
+            grid.querySelectorAll('.checkbox-overlay input[type="checkbox"]').forEach(cb => {
+                cb.checked = checked;
+                const card = cb.closest('.movie-card');
+                if (card) card.classList.toggle('selected', checked);
+            });
+        });
+
+        deselectAllBtn.addEventListener('click', () => {
+            selectedMovies.clear();
+            updateSelectionUI();
+            grid.querySelectorAll('.checkbox-overlay input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+                const card = cb.closest('.movie-card');
+                if (card) card.classList.remove('selected');
+            });
+        });
+
+        // ═══════════════════════════════════════════════════════════════
+        //  POST SELECTED (bulk)
+        // ═══════════════════════════════════════════════════════════════
+        postSelectedBtn.addEventListener('click', async () => {
+            if (selectedMovies.size === 0) {
+                showToast('Select at least one movie to post.', 'error');
+                return;
+            }
+            if (!accessToken) {
+                showToast('Sign in to Blogger first.', 'error');
+                return;
+            }
+            if (!currentBlogId) {
+                showToast('Select a blog first.', 'error');
+                return;
+            }
+
+            const movies = Array.from(selectedMovies.values());
+            await bulkPostMovies(movies);
+        });
+
+        async function bulkPostMovies(movies) {
+            // Show progress
+            bulkProgress.classList.add('show');
+            progressSuccess.textContent = '0';
+            progressFail.textContent = '0';
+            progressPending.textContent = movies.length;
+            progressFill.style.width = '0%';
+            progressItems.innerHTML = '';
+            progressLabel.textContent = 'Posting...';
+
+            let success = 0,
+                fail = 0;
+            const total = movies.length;
+
+            for (let i = 0; i < total; i++) {
+                const movie = movies[i];
+                const title = movie.title || movie.name || 'Untitled';
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'item pending';
+                itemDiv.textContent = `⏳ ${title}`;
+                progressItems.appendChild(itemDiv);
+
+                try {
+                    const result = await postToBlogger(movie);
+                    success++;
+                    itemDiv.className = 'item done';
+                    itemDiv.textContent = `✅ ${title} → ${result.url || 'posted'}`;
+                    // Add to history
+                    addHistory({
+                        title: title,
+                        date: new Date().toISOString(),
+                        status: 'success',
+                        link: result.url || '#',
+                        movieId: movie.id || '',
+                    });
+                } catch (err) {
+                    fail++;
+                    itemDiv.className = 'item fail';
+                    itemDiv.textContent = `❌ ${title} – ${err.message}`;
+                }
+
+                progressSuccess.textContent = success;
+                progressFail.textContent = fail;
+                progressPending.textContent = total - success - fail;
+                progressFill.style.width = `${((success + fail) / total) * 100}%`;
+                progressLabel.textContent = `Posting ${i+1}/${total}`;
+                progressCount.textContent = `${success + fail} / ${total}`;
+
+                // Scroll to bottom of progress items
+                progressItems.scrollTop = progressItems.scrollHeight;
+            }
+
+            progressLabel.textContent = `✅ Done! ${success} posted, ${fail} failed.`;
+            if (fail === 0) {
+                showToast(`🎉 All ${total} movies posted successfully!`, 'success');
+            } else {
+                showToast(`Posted ${success}/${total}. ${fail} failed.`, 'error');
+            }
+
+            // Clear selection after posting
+            selectedMovies.clear();
+            updateSelectionUI();
+
+            // Reload history
+            renderHistory();
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        //  POST SINGLE (from card)
+        // ═══════════════════════════════════════════════════════════════
+        window.postSingleMovie = async function(index) {
+            const movie = currentMovies[index];
+            if (!movie) return;
+            if (!accessToken) { showToast('Sign in to Blogger first.', 'error'); return; }
+            if (!currentBlogId) { showToast('Select a blog first.', 'error'); return; }
+
+            // Show progress for single
+            bulkProgress.classList.add('show');
+            progressLabel.textContent = `Posting: ${movie.title}`;
+            progressFill.style.width = '0%';
+            progressSuccess.textContent = '0';
+            progressFail.textContent = '0';
+            progressPending.textContent = '1';
+            progressItems.innerHTML = `<div class="item pending">⏳ ${movie.title}</div>`;
+
+            try {
+                const result = await postToBlogger(movie);
+                progressSuccess.textContent = '1';
+                progressFill.style.width = '100%';
+                progressItems.innerHTML = `<div class="item done">✅ ${movie.title} → ${result.url || 'posted'}</div>`;
+                addHistory({
+                    title: movie.title,
+                    date: new Date().toISOString(),
+                    status: 'success',
+                    link: result.url || '#',
+                    movieId: movie.id || '',
+                });
+                renderHistory();
+                showToast(`✅ "${movie.title}" posted!`, 'success');
+            } catch (err) {
+                progressFail.textContent = '1';
+                progressFill.style.width = '100%';
+                progressItems.innerHTML = `<div class="item fail">❌ ${movie.title} – ${err.message}</div>`;
+                showToast(`Error posting "${movie.title}": ${err.message}`, 'error');
+            }
+            progressPending.textContent = '0';
+            progressLabel.textContent = 'Done';
+            progressCount.textContent = '1 / 1';
+        };
+
+        // ═══════════════════════════════════════════════════════════════
+        //  MODAL
+        // ═══════════════════════════════════════════════════════════════
+        window.openModalByIndex = function(index) {
+            const movie = currentMovies[index];
+            if (!movie) return;
+            openModal(movie);
+        };
+
+        let currentModalMovie = null;
+
+        function openModal(movie) {
+            currentModalMovie = movie;
+            modalTitle.textContent = movie.title || movie.name || 'Untitled';
+            const year = movie.year || '—';
+            const rating = movie.vote_average ? movie.vote_average.toFixed(1) + '/10' : '—';
+            modalSub.innerHTML = `<span>📅 ${year}</span><span>⭐ ${rating}</span><span>${movie.media_type === 'tv' ? '📺 TV' : '🎬 Movie'}</span>`;
+            modalOverview.textContent = movie.overview || movie.description || 'No description available.';
+
+            const posterEl = modalPoster;
+            const embedUrl = movie.embed_url;
+            if (embedUrl) {
+                posterEl.innerHTML =
+                    `<iframe src="${embedUrl}" referrerpolicy="origin" allowfullscreen allow="autoplay; encrypted-media; fullscreen" loading="lazy"></iframe>`;
+            } else {
+                const poster = movie.poster_path ? getPosterUrl(movie.poster_path) : null;
+                posterEl.innerHTML = `
+                    <div class="player-placeholder" style="background:var(--bg-primary);">
+                        ${poster ? `<img src="${poster}" alt="${movie.title}" style="width:100%;height:100%;object-fit:cover;opacity:0.5;" />` : ''}
+                        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);">
+                            <span style="font-size:14px;color:var(--text-secondary);">${movie.imdb_id ? 'No embed available' : 'No IMDb ID'}</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            modalPlayBtn.onclick = () => {
+                if (embedUrl) {
+                    posterEl.innerHTML =
+                        `<iframe src="${embedUrl}" referrerpolicy="origin" allowfullscreen allow="autoplay; encrypted-media; fullscreen" loading="lazy"></iframe>`;
+                } else {
+                    showToast('No playable embed available.', 'error');
+                }
+            };
+
+            modalTrailerBtn.onclick = async () => {
+                try {
+                    const type = movie.media_type || 'movie';
+                    const url = `${TMDB_BASE}/${type}/${movie.id}/videos?api_key=${TMDB_API_KEY}&language=en-US`;
+                    const resp = await fetch(url);
+                    const data = await resp.json();
+                    const trailer = data.results?.find(v => v.type === 'Trailer' && v.site === 'YouTube');
+                    if (trailer) {
+                        const embed = `https://www.youtube.com/embed/${trailer.key}?autoplay=1`;
+                        posterEl.innerHTML =
+                            `<iframe src="${embed}" referrerpolicy="origin" allowfullscreen allow="autoplay; encrypted-media; fullscreen" loading="lazy"></iframe>`;
+                    } else {
+                        showToast('No trailer found.', 'error');
+                    }
+                } catch (_) {
+                    showToast('Could not fetch trailer.', 'error');
+                }
+            };
+
+            modalPostBtn.onclick = async () => {
+                if (!accessToken) { showToast('Sign in to Blogger first.', 'error'); return; }
+                if (!currentBlogId) { showToast('Select a blog first.', 'error'); return; }
+                try {
+                    const result = await postToBlogger(movie);
+                    addHistory({
+                        title: movie.title,
+                        date: new Date().toISOString(),
+                        status: 'success',
+                        link: result.url || '#',
+                        movieId: movie.id || '',
+                    });
+                    renderHistory();
+                    showToast(`✅ "${movie.title}" posted!`, 'success');
+                    closeModal();
+                } catch (err) {
+                    showToast(`Error: ${err.message}`, 'error');
+                }
+            };
+
+            overlay.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            overlay.classList.remove('open');
+            document.body.style.overflow = '';
+            modalPoster.innerHTML = `<div class="player-placeholder">Loading…</div>`;
+        }
+
+        modalClose.addEventListener('click', closeModal);
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+        // ═══════════════════════════════════════════════════════════════
+        //  PAGINATION
+        // ═══════════════════════════════════════════════════════════════
+        function renderPagination() {
+            pageInfo.textContent = `Page ${currentPage} of ${totalPages || 1}`;
+            prevPageBtn.disabled = currentPage <= 1;
+            nextPageBtn.disabled = currentPage >= totalPages;
+        }
+
+        prevPageBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                loadCategory(currentCategory, currentPage - 1, searchQuery);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        });
+
+        nextPageBtn.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                loadCategory(currentCategory, currentPage + 1, searchQuery);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        });
+
+        // ═══════════════════════════════════════════════════════════════
+        //  SEARCH
+        // ═══════════════════════════════════════════════════════════════
+        function performSearch() {
+            const q = searchInput.value.trim();
+            if (!q) {
+                loadCategory(currentCategory, 1, '');
+                return;
+            }
+            loadCategory(currentCategory, 1, q);
+        }
+
+        searchBtn.addEventListener('click', performSearch);
+        searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') performSearch(); });
+
+        clearSearchBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            loadCategory(currentCategory, 1, '');
+        });
+
+        // ═══════════════════════════════════════════════════════════════
+        //  CATEGORY TABS
+        // ═══════════════════════════════════════════════════════════════
+        categoryTabs.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const cat = btn.dataset.cat;
+                if (cat !== currentCategory || searchQuery) {
+                    searchInput.value = '';
+                    loadCategory(cat, 1, '');
+                }
+            });
+        });
+
+        // ═══════════════════════════════════════════════════════════════
+        //  POST HISTORY
+        // ═══════════════════════════════════════════════════════════════
+        function addHistory(entry) {
+            postHistory.unshift(entry);
+            if (postHistory.length > 200) postHistory = postHistory.slice(0, 200);
+            localStorage.setItem('postHistory', JSON.stringify(postHistory));
+        }
+
+        function renderHistory() {
+            if (postHistory.length === 0) {
+                historyBody.innerHTML = `<tr class="empty-row"><td colspan="4">No posts yet.</td></tr>`;
+                return;
+            }
+            const html = postHistory.map(h => `
+                    <tr>
+                        <td>${h.title}</td>
+                        <td>${new Date(h.date).toLocaleDateString()} ${new Date(h.date).toLocaleTimeString()}</td>
+                        <td><span class="status ${h.status}">${h.status}</span></td>
+                        <td>${h.link && h.link !== '#' ? `<a href="${h.link}" target="_blank">🔗 View</a>` : '—'}</td>
+                    </tr>
+                `).join('');
+            historyBody.innerHTML = html;
+        }
+
+        clearHistoryBtn.addEventListener('click', () => {
+            if (confirm('Clear all post history?')) {
+                postHistory = [];
+                localStorage.setItem('postHistory', JSON.stringify(postHistory));
+                renderHistory();
+                showToast('History cleared.', 'info');
+            }
+        });
+
+        // ═══════════════════════════════════════════════════════════════
+        //  TEMPLATE EDITOR
+        // ═══════════════════════════════════════════════════════════════
+        templateTextarea.value = postTemplate;
+
+        saveTemplateBtn.addEventListener('click', () => {
+            postTemplate = templateTextarea.value;
+            localStorage.setItem('postTemplate', postTemplate);
+            showToast('✅ Template saved!', 'success');
+        });
+
+        resetTemplateBtn.addEventListener('click', () => {
+            if (confirm('Reset to default template?')) {
+                templateTextarea.value = defaultTemplate();
+                postTemplate = defaultTemplate();
+                localStorage.setItem('postTemplate', postTemplate);
+                showToast('Template reset to default.', 'info');
+            }
+        });
+
+        previewTemplateBtn.addEventListener('click', () => {
+            if (currentMovies.length === 0) {
+                showToast('No movies to preview with. Load some movies first.', 'error');
+                return;
+            }
+            const sample = currentMovies[0];
+            const preview = renderTemplate(sample, templateTextarea.value || postTemplate);
+            const win = window.open('', '_blank', 'width=800,height=600');
+            win.document.write(`
+                    <html><head><title>Template Preview</title>
+                    <style>body{font-family:sans-serif;background:#0a0e17;color:#f1f5f9;padding:20px;max-width:800px;margin:0 auto;}</style>
+                    </head><body>
+                    <h2>Preview: ${sample.title}</h2>
+                    <hr style="border-color:#2d3a4f;">
+                    ${preview}
+                    <p style="margin-top:20px;color:#64748b;font-size:12px;">This is a preview of how the post will appear on Blogger.</p>
+                    </body></html>
+                `);
+            win.document.close();
+        });
+
+        // ═══════════════════════════════════════════════════════════════
+        //  MANUAL POST FORM
+        // ═══════════════════════════════════════════════════════════════
+        manualForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = manualTitle.value.trim();
+            if (!title) { showToast('Title is required.', 'error'); return; }
+            if (!accessToken) { showToast('Sign in to Blogger first.', 'error'); return; }
+            if (!currentBlogId) { showToast('Select a blog first.', 'error'); return; }
+
+            const movie = {
+                title: title,
+                year: manualYear.value || '',
+                description: manualDesc.value.trim(),
+                tags: manualTags.value,
+                poster: manualPoster.value.trim(),
+                imdbId: manualImdb.value.trim(),
+                overview: manualDesc.value.trim(),
+            };
+
+            try {
+                const result = await postToBlogger(movie);
+                addHistory({
+                    title: title,
+                    date: new Date().toISOString(),
+                    status: 'success',
+                    link: result.url || '#',
+                    movieId: '',
+                });
+                renderHistory();
+                showToast(`✅ "${title}" posted!`, 'success');
+                manualForm.reset();
+            } catch (err) {
+                showToast(`Error: ${err.message}`, 'error');
+            }
+        });
+
+        manualClearBtn.addEventListener('click', () => {
+            manualForm.reset();
+        });
+
+        // ═══════════════════════════════════════════════════════════════
+        //  INIT
+        // ═══════════════════════════════════════════════════════════════
+        // Load default category
+        loadCategory('trending', 1, '');
+
+        // Init OAuth if client ID set
+        if (CLIENT_ID && CLIENT_ID !== 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com') {
+            initOAuth();
+        } else {
+            showToast('⚠️ Set your Google Client ID in the script.', 'error');
+        }
+
+        // Render history
+        renderHistory();
+
+        console.log('🎬 Blogger Movie Poster Pro loaded.');
+        console.log('📋 Features: TMDB browser, multi-select, bulk post, AI content, template editor, history, manual form.');
     </script>
 </body>
 </html>
