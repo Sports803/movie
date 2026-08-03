@@ -1359,7 +1359,7 @@
         let tokenClient = null;
 
         function initOAuth() {
-            if (!CLIENT_ID || CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com') {
+            if (!CLIENT_ID || CLIENT_ID === '55046129292-15h9k5ga0lr1e3p3ptqg1iueeks49f7v.apps.googleusercontent.com') {
                 showToast('⚠️ Set your Google Client ID in the script.', 'error');
                 return;
             }
@@ -2262,7 +2262,7 @@
         loadCategory('trending', 1, '');
 
         // Init OAuth if client ID set
-        if (CLIENT_ID && CLIENT_ID !== 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com') {
+        if (CLIENT_ID && CLIENT_ID !== '55046129292-15h9k5ga0lr1e3p3ptqg1iueeks49f7v.apps.googleusercontent.com') {
             initOAuth();
         } else {
             showToast('⚠️ Set your Google Client ID in the script.', 'error');
