@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="referrer" content="origin" />
-    <title>Blogger Movie Poster Pro - Upgraded</title>
+    <title>Blogger Movie Poster Pro - Upgraded V3</title>
     <script src="https://accounts.google.com/gsi/client"></script>
     <style>
         /* ─────────── RESET & BASE ─────────── */
@@ -999,7 +999,7 @@
     <!-- ═══════════ HEADER ═══════════ -->
     <header class="header">
         <div class="container">
-            <div class="logo">🎬 <span>Blogger</span>MoviePoster <small>· Pro Upgraded</small></div>
+            <div class="logo">🎬 <span>Blogger</span>MoviePoster <small>· Pro V3</small></div>
             <div class="header-actions">
                 <span class="blogger-status" id="bloggerStatus">
                     <span class="dot offline" id="statusDot"></span>
@@ -1119,26 +1119,6 @@
             </div>
         </div>
 
-        <!-- ─── MANUAL POST FORM ─── -->
-        <div class="manual-form" id="manualForm">
-            <div class="header-row">
-                <h3>✏️ Manual Post</h3>
-                <span style="font-size:12px;color:var(--text-muted);">Fill in details and post directly</span>
-            </div>
-            <form id="manualPostForm" class="form-grid">
-                <label>Title *<input type="text" id="manualTitle" required /></label>
-                <label>Year <input type="number" id="manualYear" /></label>
-                <label class="full">Description <textarea id="manualDesc" rows="2"></textarea></label>
-                <label>Tags (comma separated) <input type="text" id="manualTags" placeholder="action, drama" /></label>
-                <label>Poster URL <input type="url" id="manualPoster" placeholder="https://..." /></label>
-                <label>IMDb ID <input type="text" id="manualImdb" placeholder="tt1234567" /></label>
-                <div class="actions">
-                    <button type="submit" class="btn btn-primary">📤 Post to Blogger</button>
-                    <button type="button" class="btn btn-secondary" id="manualClearBtn">Clear</button>
-                </div>
-            </form>
-        </div>
-
     </main>
 
     <!-- ═══════════ MODAL ═══════════ -->
@@ -1175,7 +1155,7 @@
         // ═══════════════════════════════════════════════════════════════
         //  CONFIGURATION
         // ═══════════════════════════════════════════════════════════════
-        const CLIENT_ID = '55046129292-15h9k5ga0lr1e3p3ptqg1iueeks49f7v.apps.googleusercontent.com'; // <-- REPLACE
+        const CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com'; // <-- REPLACE
         const TMDB_API_KEY = '4ca723ffe03da0512b8e67d5faa4cdf0';
         const TMDB_BASE = 'https://api.themoviedb.org/3';
         const TMDB_IMAGE = 'https://image.tmdb.org/t/p/w500';
@@ -1237,14 +1217,6 @@
         const saveTemplateBtn = document.getElementById('saveTemplateBtn');
         const resetTemplateBtn = document.getElementById('resetTemplateBtn');
         const previewTemplateBtn = document.getElementById('previewTemplateBtn');
-        const manualForm = document.getElementById('manualPostForm');
-        const manualTitle = document.getElementById('manualTitle');
-        const manualYear = document.getElementById('manualYear');
-        const manualDesc = document.getElementById('manualDesc');
-        const manualTags = document.getElementById('manualTags');
-        const manualPoster = document.getElementById('manualPoster');
-        const manualImdb = document.getElementById('manualImdb');
-        const manualClearBtn = document.getElementById('manualClearBtn');
         const overlay = document.getElementById('modalOverlay');
         const modalClose = document.getElementById('modalClose');
         const modalPoster = document.getElementById('modalPoster');
@@ -1257,8 +1229,10 @@
         const toastContainer = document.getElementById('toastContainer');
 
         // ═══════════════════════════════════════════════════════════════
-        //  TEMPLATE DEFAULTS
+        //  UTILS
         // ═══════════════════════════════════════════════════════════════
+        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
         function defaultTemplate() {
             return `<div class="separator" style="display:none">
   {poster}
@@ -1283,9 +1257,6 @@
 </iframe>`;
         }
 
-        // ═══════════════════════════════════════════════════════════════
-        //  TOAST
-        // ═══════════════════════════════════════════════════════════════
         function showToast(msg, type = 'info', duration = 4000) {
             const el = document.createElement('div');
             el.className = 'toast';
@@ -1434,9 +1405,7 @@
         async function fetchTVDetails(tmdbId) {
             const series = await fetchFromTMDB(`/tv/${tmdbId}`);
             const episodes = [];
-            // Fetch first season episodes as a default for the episode list
             if (series.seasons && series.seasons.length > 0) {
-                // We usually want Season 1 or the latest
                 const s1 = series.seasons.find(s => s.season_number === 1) || series.seasons[0];
                 const seasonData = await fetchFromTMDB(`/tv/${tmdbId}/season/${s1.season_number}`);
                 if (seasonData.episodes) {
@@ -1462,24 +1431,18 @@
             const imdbId = movie.imdb_id || movie.imdbId || '';
             let embedUrl = imdbId ? `${VIDSRC_BASE}/${imdbId}` : '';
             
-            // For TV series, if we have episodes, use the first one as default embed
             if (movie.media_type === 'tv' && episodes.length > 0) {
                 embedUrl = episodes[0].src;
             }
 
             const year = movie.year || '';
             const tags = movie.tags || (movie.genre_names ? movie.genre_names.join(', ') : '');
+            const posterHtml = poster ? `<img src="${poster}" width="400"/>` : '';
 
-            const posterHtml = poster ?
-                `<img src="${poster}" width="400"/>` :
-                '';
-
-            // Generate episodeData JSON
             let episodeDataJson = '[]';
             if (movie.media_type === 'tv' && episodes.length > 0) {
                 episodeDataJson = JSON.stringify(episodes, null, 2);
             } else if (imdbId) {
-                // Default single episode for movies or unknown series
                 episodeDataJson = JSON.stringify([{ ep: 1, src: embedUrl }], null, 2);
             }
 
@@ -1564,7 +1527,6 @@
                 totalPages = data.total_pages || 1;
                 const items = data.results || [];
                 
-                // Enrich with external IDs
                 currentMovies = await Promise.all(items.map(async item => {
                     const type = item.media_type || (cat === 'tv' ? 'tv' : 'movie');
                     let imdbId = null;
@@ -1616,7 +1578,6 @@
                 </div>
             `).join('');
 
-            // Events
             grid.querySelectorAll('.movie-card').forEach(card => {
                 const idx = parseInt(card.dataset.idx);
                 const movie = currentMovies[idx];
@@ -1631,6 +1592,12 @@
                     toggleSelect(idx, card);
                 };
             });
+        }
+
+        function renderPagination() {
+            pageInfo.textContent = `Page ${currentPage} of ${totalPages || 1}`;
+            prevPageBtn.disabled = currentPage <= 1;
+            nextPageBtn.disabled = currentPage >= totalPages;
         }
 
         function toggleSelect(idx, card) {
@@ -1745,19 +1712,32 @@
             
             for (let i = 0; i < movies.length; i++) {
                 try {
+                    progressLabel.textContent = `Posting "${movies[i].title}"...`;
                     await postToBlogger(movies[i]);
                     success++;
-                } catch (e) { fail++; }
+                } catch (e) { 
+                    fail++; 
+                    console.error(e);
+                }
                 progressCount.textContent = `${i+1} / ${movies.length}`;
                 progressFill.style.width = `${((i+1)/movies.length)*100}%`;
+                
+                // ADD DELAY TO AVOID QUOTA (3 seconds)
+                if (i < movies.length - 1) {
+                    progressLabel.textContent = `Waiting to avoid quota...`;
+                    await sleep(3000); 
+                }
             }
+            
+            progressLabel.textContent = `Finished! Success: ${success}, Fail: ${fail}`;
             showToast(`Bulk post finished. Success: ${success}, Fail: ${fail}`, 'info');
             selectedMovies.clear();
             updateSelectionUI();
             renderMovies();
+            
+            setTimeout(() => { bulkProgress.classList.remove('show'); }, 5000);
         };
 
-        // Start
         loadCategory('trending');
         initOAuth();
         renderHistory();
