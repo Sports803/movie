@@ -1162,6 +1162,17 @@
         const VIDSRC_BASE = 'https://vidsrcme.ru/embed';
 
         // ═══════════════════════════════════════════════════════════════
+        //  GENRE MAP (TMDB IDs -> Names)
+        // ═══════════════════════════════════════════════════════════════
+        const GENRE_MAP = {
+            28: 'Action', 12: 'Adventure', 16: 'Animation', 35: 'Comedy', 80: 'Crime', 99: 'Documentary',
+            18: 'Drama', 10751: 'Family', 14: 'Fantasy', 36: 'History', 27: 'Horror', 10402: 'Music',
+            9648: 'Mystery', 10749: 'Romance', 878: 'Science Fiction', 10770: 'TV Movie', 53: 'Thriller',
+            10752: 'War', 37: 'Western', 10759: 'Action & Adventure', 10762: 'Kids', 10763: 'News',
+            10764: 'Reality', 10765: 'Sci-Fi & Fantasy', 10766: 'Soap', 10767: 'Talk', 10768: 'War & Politics'
+        };
+
+        // ═══════════════════════════════════════════════════════════════
         //  STATE
         // ═══════════════════════════════════════════════════════════════
         let accessToken = null;
@@ -1470,14 +1481,37 @@
 
             const title = (movie.title || 'Untitled') + (movie.year ? ` (${movie.year})` : '');
             const content = renderTemplate(movie, templateTextarea.value || postTemplate, episodes);
-            const tags = movie.tags || (movie.genre_names ? movie.genre_names.join(', ') : '');
+
+            // ─── BUILD LABELS AUTOMATICALLY ───
+            const mediaTypeLabel = movie.media_type === 'tv' ? 'tv' : 'movie';
+            let labels = [mediaTypeLabel];
+
+            // Add genre names from TMDB genre_ids (converted to names)
+            if (movie.genre_names && movie.genre_names.length) {
+                movie.genre_names.forEach(g => labels.push(g.toLowerCase()));
+            }
+
+            // Always ensure "horror" label if the genre is present
+            if (movie.genre_names && movie.genre_names.some(g => g.toLowerCase() === 'horror')) {
+                if (!labels.includes('horror')) labels.push('horror');
+            }
+
+            // Add any custom tags that might already exist on the movie object (e.g., from search)
+            if (movie.tags) {
+                movie.tags.split(',').map(s => s.trim().toLowerCase()).filter(Boolean).forEach(t => {
+                    if (!labels.includes(t)) labels.push(t);
+                });
+            }
+
+            // Remove duplicates and filter empty
+            labels = [...new Set(labels)].filter(Boolean);
 
             const postData = {
                 kind: 'blogger#post',
                 blog: { id: currentBlogId },
                 title: title,
                 content: content,
-                labels: tags.split(',').map(s => s.trim()).filter(Boolean),
+                labels: labels,
             };
 
             const resp = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${currentBlogId}/posts`, {
@@ -1534,6 +1568,9 @@
                         const ids = await fetchFromTMDB(`/${type}/${item.id}/external_ids`);
                         imdbId = ids.imdb_id;
                     } catch(e){}
+
+                    // Convert genre_ids to genre_names using the map
+                    const genreNames = (item.genre_ids || []).map(id => GENRE_MAP[id]).filter(Boolean);
                     
                     return {
                         ...item,
@@ -1542,12 +1579,15 @@
                         title: item.title || item.name || 'Untitled',
                         year: (item.release_date || item.first_air_date || '').split('-')[0],
                         imdb_id: imdbId,
-                        embed_url: imdbId ? `${VIDSRC_BASE}/${imdbId}` : null
+                        embed_url: imdbId ? `${VIDSRC_BASE}/${imdbId}` : null,
+                        genre_names: genreNames   // <-- populated from IDs
                     };
                 }));
 
+                selectedMovies.clear(); // clear selections when page changes
                 renderMovies();
                 renderPagination();
+                updateSelectionUI();
             } catch (err) {
                 grid.innerHTML = `<div class="empty-state"><h3>Oops!</h3><p>${err.message}</p></div>`;
             } finally {
@@ -1578,6 +1618,7 @@
                 </div>
             `).join('');
 
+            // Attach event listeners
             grid.querySelectorAll('.movie-card').forEach(card => {
                 const idx = parseInt(card.dataset.idx);
                 const movie = currentMovies[idx];
@@ -1592,6 +1633,8 @@
                     toggleSelect(idx, card);
                 };
             });
+
+            syncSelectionToDOM(); // ensure checkboxes reflect state
         }
 
         function renderPagination() {
@@ -1600,19 +1643,32 @@
             nextPageBtn.disabled = currentPage >= totalPages;
         }
 
+        // ─── SELECTION LOGIC ───
         function toggleSelect(idx, card) {
             if (selectedMovies.has(idx)) {
                 selectedMovies.delete(idx);
-                card.classList.remove('selected');
-                card.querySelector('.checkbox-overlay').classList.remove('show');
-                card.querySelector('input').checked = false;
             } else {
                 selectedMovies.set(idx, currentMovies[idx]);
-                card.classList.add('selected');
-                card.querySelector('.checkbox-overlay').classList.add('show');
-                card.querySelector('input').checked = true;
             }
             updateSelectionUI();
+            syncCardSelection(card, selectedMovies.has(idx));
+        }
+
+        function syncCardSelection(card, isSelected) {
+            if (!card) return;
+            card.classList.toggle('selected', isSelected);
+            const overlay = card.querySelector('.checkbox-overlay');
+            if (overlay) overlay.classList.toggle('show', isSelected);
+            const cb = card.querySelector('input[type="checkbox"]');
+            if (cb) cb.checked = isSelected;
+        }
+
+        function syncSelectionToDOM() {
+            grid.querySelectorAll('.movie-card').forEach(card => {
+                const idx = parseInt(card.dataset.idx);
+                const isSelected = selectedMovies.has(idx);
+                syncCardSelection(card, isSelected);
+            });
         }
 
         function updateSelectionUI() {
@@ -1620,6 +1676,23 @@
             postSelectedBtn.disabled = selectedMovies.size === 0;
             selectAllCheckbox.checked = selectedMovies.size === currentMovies.length && currentMovies.length > 0;
         }
+
+        // ─── SELECT ALL / DESELECT ALL HANDLERS ───
+        selectAllCheckbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                currentMovies.forEach((movie, idx) => selectedMovies.set(idx, movie));
+            } else {
+                selectedMovies.clear();
+            }
+            updateSelectionUI();
+            syncSelectionToDOM();
+        });
+
+        deselectAllBtn.addEventListener('click', () => {
+            selectedMovies.clear();
+            updateSelectionUI();
+            syncSelectionToDOM();
+        });
 
         async function postSingle(movie) {
             if (!accessToken || !currentBlogId) { showToast('Sign in and select a blog first.', 'error'); return; }
@@ -1733,15 +1806,19 @@
             showToast(`Bulk post finished. Success: ${success}, Fail: ${fail}`, 'info');
             selectedMovies.clear();
             updateSelectionUI();
-            renderMovies();
+            syncSelectionToDOM();
             
             setTimeout(() => { bulkProgress.classList.remove('show'); }, 5000);
         };
 
+        clearSearchBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            loadCategory(currentCategory, 1, '');
+        });
+
         loadCategory('trending');
         initOAuth();
         renderHistory();
-
     </script>
 </body>
 </html>
