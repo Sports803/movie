@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="referrer" content="origin" />
-    <title>Blogger Movie Poster Pro</title>
+    <title>Blogger Movie Poster Pro — Series Edition</title>
     <script src="https://accounts.google.com/gsi/client"></script>
     <style>
         /* ─────────── RESET & BASE ─────────── */
@@ -349,7 +349,6 @@
             padding: 12px;
             background: var(--bg-secondary);
         }
-        /* Checkbox overlay */
         .movie-card .checkbox-overlay {
             position: absolute;
             top: 8px;
@@ -756,6 +755,11 @@
         .template-editor .preview-btn {
             margin-top: 8px;
         }
+        .template-editor .info-note {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
         /* ─────────── MANUAL POST FORM ─────────── */
         .manual-form {
             background: var(--bg-secondary);
@@ -792,7 +796,8 @@
             gap: 4px;
         }
         .manual-form input,
-        .manual-form textarea {
+        .manual-form textarea,
+        .manual-form select {
             background: var(--bg-primary);
             border: 1px solid var(--border);
             border-radius: 8px;
@@ -803,7 +808,8 @@
             transition: var(--transition);
         }
         .manual-form input:focus,
-        .manual-form textarea:focus {
+        .manual-form textarea:focus,
+        .manual-form select:focus {
             border-color: var(--accent);
         }
         .manual-form textarea {
@@ -1049,7 +1055,7 @@
     <!-- ═══════════ HEADER ═══════════ -->
     <header class="header">
         <div class="container">
-            <div class="logo">🎬 <span>Blogger</span>MoviePoster <small>· Pro</small></div>
+            <div class="logo">🎬 <span>Blogger</span>MoviePoster <small>· Series Edition</small></div>
             <div class="header-actions">
                 <span class="blogger-status" id="bloggerStatus">
                     <span class="dot offline" id="statusDot"></span>
@@ -1078,7 +1084,7 @@
                 <span style="font-size:12px;color:var(--text-muted);" id="blogStatus"></span>
             </div>
             <div class="panel-row" style="margin-top:6px;">
-                <label style="font-size:12px;color:var(--text-muted);">💡 Select movies below, then click "Post Selected"</label>
+                <label style="font-size:12px;color:var(--text-muted);">💡 Select movies/series, then click "Post Selected"</label>
             </div>
         </div>
 
@@ -1105,7 +1111,7 @@
             </div>
             <div class="toolbar-right">
                 <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="Search movies..." />
+                    <input type="text" id="searchInput" placeholder="Search movies/series..." />
                     <button id="searchBtn">Go</button>
                 </div>
                 <button class="btn btn-secondary btn-sm" id="clearSearchBtn">✕</button>
@@ -1163,9 +1169,12 @@
                 </div>
             </div>
             <textarea id="templateTextarea" spellcheck="false"></textarea>
+            <div class="info-note">
+                💡 <strong>TV series</strong> automatically use a special layout with episode data JSON and a lazyload iframe.
+                Placeholders: <code>{title}</code> <code>{year}</code> <code>{description}</code> <code>{tags}</code> <code>{poster}</code> <code>{embed}</code> <code>{imdb}</code> <code>{episode_data}</code>
+            </div>
             <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;">
                 <button class="btn btn-secondary btn-sm preview-btn" id="previewTemplateBtn">👁️ Preview</button>
-                <span style="font-size:11px;color:var(--text-muted);">Available: <code>{title}</code> <code>{year}</code> <code>{description}</code> <code>{tags}</code> <code>{poster}</code> <code>{embed}</code> <code>{imdb}</code></span>
             </div>
         </div>
 
@@ -1178,6 +1187,12 @@
             <form id="manualPostForm" class="form-grid">
                 <label>Title *<input type="text" id="manualTitle" required /></label>
                 <label>Year <input type="number" id="manualYear" /></label>
+                <label>Type
+                    <select id="manualType">
+                        <option value="movie">🎬 Movie</option>
+                        <option value="tv">📺 TV Series</option>
+                    </select>
+                </label>
                 <label class="full">Description <textarea id="manualDesc" rows="2"></textarea></label>
                 <label>Tags (comma separated) <input type="text" id="manualTags" placeholder="action, drama" /></label>
                 <label>Poster URL <input type="url" id="manualPoster" placeholder="https://..." /></label>
@@ -1217,7 +1232,7 @@
     <!-- ═══════════ FOOTER ═══════════ -->
     <footer class="footer">
         <div class="container">
-            <p>🎥 <strong>Blogger Movie Poster Pro</strong> — powered by <a href="https://www.themoviedb.org/" target="_blank">TMDB</a> &amp; <a href="https://developers.google.com/blogger" target="_blank">Blogger API</a>. Ad‑free embed via vidsrcme.ru.</p>
+            <p>🎥 <strong>Blogger Movie Poster Pro — Series Edition</strong> — powered by <a href="https://www.themoviedb.org/" target="_blank">TMDB</a> &amp; <a href="https://developers.google.com/blogger" target="_blank">Blogger API</a>.</p>
         </div>
     </footer>
 
@@ -1228,7 +1243,7 @@
         // ═══════════════════════════════════════════════════════════════
         //  CONFIGURATION – REPLACE WITH YOUR VALUES
         // ═══════════════════════════════════════════════════════════════
-        const CLIENT_ID = '55046129292-15h9k5ga0lr1e3p3ptqg1iueeks49f7v.apps.googleusercontent.com'; // <-- REPLACE
+        const CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com'; // <-- REPLACE
         const TMDB_API_KEY = '4ca723ffe03da0512b8e67d5faa4cdf0';
         const TMDB_BASE = 'https://api.themoviedb.org/3';
         const TMDB_IMAGE = 'https://image.tmdb.org/t/p/w500';
@@ -1300,6 +1315,7 @@
         const manualForm = document.getElementById('manualPostForm');
         const manualTitle = document.getElementById('manualTitle');
         const manualYear = document.getElementById('manualYear');
+        const manualType = document.getElementById('manualType');
         const manualDesc = document.getElementById('manualDesc');
         const manualTags = document.getElementById('manualTags');
         const manualPoster = document.getElementById('manualPoster');
@@ -1322,6 +1338,9 @@
         //  TEMPLATE DEFAULTS
         // ═══════════════════════════════════════════════════════════════
         function defaultTemplate() {
+            // For movies: standard layout
+            // For TV: series layout with episodeData
+            // We'll detect in renderTemplate and override
             return `<div style="text-align:center;margin-bottom:20px;">
             {poster}
         </div>
@@ -1334,6 +1353,34 @@
             <p><strong>🏷️ Tags:</strong> {tags}</p>
             <p><small>IMDb: {imdb}</small></p>
         </div>`;
+        }
+
+        // Series-specific template with episode data
+        function seriesTemplate() {
+            return `<div class="separator" style="display:none">
+            <img src="{poster_url}" width="400"/>
+        </div>
+
+        <div style="font-size:16px;line-height:1.8;color:#e2e8f0;">
+            <p><strong>🎬 {title}</strong> ({year})</p>
+            <p>{description}</p>
+            <p><strong>🏷️ Tags:</strong> {tags}</p>
+            <p><small>IMDb: {imdb}</small></p>
+        </div>
+
+        <script type="application/json" id="episodeData">
+        {episode_data}
+        </script>
+
+        <iframe id="media-player"
+          class="lazyload"
+          src="{embed}"
+          data-src="{embed}"
+          allow="autoplay; encrypted-media"
+          width="100%"
+          height="100%"
+          allowfullscreen>
+        </iframe>`;
         }
 
         // ═══════════════════════════════════════════════════════════════
@@ -1359,7 +1406,7 @@
         let tokenClient = null;
 
         function initOAuth() {
-            if (!CLIENT_ID || CLIENT_ID === '55046129292-15h9k5ga0lr1e3p3ptqg1iueeks49f7v.apps.googleusercontent.com') {
+            if (!CLIENT_ID || CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com') {
                 showToast('⚠️ Set your Google Client ID in the script.', 'error');
                 return;
             }
@@ -1424,7 +1471,6 @@
         if (savedToken) {
             accessToken = savedToken;
             updateAuthUI(true);
-            // fetch user info after a moment
             setTimeout(fetchBloggerInfo, 500);
         } else {
             updateAuthUI(false);
@@ -1439,7 +1485,6 @@
         async function fetchBloggerInfo() {
             if (!accessToken) return;
             try {
-                // Get user info
                 const userResp = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
                     headers: { 'Authorization': 'Bearer ' + accessToken }
                 });
@@ -1451,7 +1496,6 @@
                     updateAuthUI(true);
                 }
 
-                // Get blogs
                 const blogsResp = await fetch('https://www.googleapis.com/blogger/v3/users/self/blogs', {
                     headers: { 'Authorization': 'Bearer ' + accessToken }
                 });
@@ -1468,15 +1512,12 @@
                         blogSelect.value = currentBlogId;
                     }
                     blogStatus.textContent = `📚 ${blogsData.items.length} blog(s) found`;
-                    showToast(`✅ Found ${blogsData.items.length} blog(s)`, 'success');
                 } else {
-                    blogStatus.textContent = '⚠️ No blogs found for this account';
-                    showToast('No blogs found for this account.', 'error');
+                    blogStatus.textContent = '⚠️ No blogs found';
                 }
             } catch (err) {
                 console.error(err);
                 blogStatus.textContent = '❌ Error fetching blogs';
-                showToast('Error fetching blogs: ' + err.message, 'error');
             }
         }
 
@@ -1494,35 +1535,54 @@
         });
 
         // ═══════════════════════════════════════════════════════════════
-        //  POST TO BLOGGER (with template)
+        //  RENDER TEMPLATE (with series detection)
         // ═══════════════════════════════════════════════════════════════
         function renderTemplate(movie, template) {
+            const isSeries = movie.media_type === 'tv' || (movie.type === 'tv') || (movie.isSeries === true);
             const poster = movie.poster_path ? (movie.poster_path.startsWith('http') ? movie.poster_path : TMDB_IMAGE +
                     movie.poster_path) : (movie.poster || '');
             const embedUrl = movie.imdb_id || movie.imdbId ? `${VIDSRC_BASE}/${movie.imdb_id || movie.imdbId}` : '';
             const year = movie.release_date ? movie.release_date.split('-')[0] : (movie.first_air_date ? movie
                 .first_air_date.split('-')[0] : (movie.year || ''));
             const tags = movie.tags || (movie.genre_names ? movie.genre_names.join(', ') : '');
+            const description = movie.overview || movie.description || '';
 
-            const posterHtml = poster ?
-                `<img src="${poster}" alt="${movie.title}" style="max-width:100%;border-radius:8px;max-height:400px;" />` :
-                '';
-            const embedHtml = embedUrl ?
-                `<iframe src="${embedUrl}" referrerpolicy="origin" style="width:100%;aspect-ratio:16/9;border:0;border-radius:8px;" allowfullscreen></iframe>` :
-                '';
-
-            let content = template
-                .replace(/\{title\}/g, movie.title || movie.name || 'Untitled')
-                .replace(/\{year\}/g, year || '')
-                .replace(/\{description\}/g, (movie.overview || movie.description || '').replace(/\n/g, '<br>'))
-                .replace(/\{tags\}/g, tags || '')
-                .replace(/\{poster\}/g, posterHtml)
-                .replace(/\{embed\}/g, embedHtml)
-                .replace(/\{imdb\}/g, movie.imdb_id || movie.imdbId || '');
-
-            return content;
+            // For series, use series template
+            if (isSeries) {
+                const posterHtml = poster ? poster : '';
+                const embed = embedUrl || '';
+                const episodeData = JSON.stringify([{ "ep": 1, "src": embed }]);
+                return seriesTemplate()
+                    .replace(/\{poster_url\}/g, posterHtml)
+                    .replace(/\{title\}/g, movie.title || movie.name || 'Untitled')
+                    .replace(/\{year\}/g, year)
+                    .replace(/\{description\}/g, description.replace(/\n/g, '<br>'))
+                    .replace(/\{tags\}/g, tags)
+                    .replace(/\{imdb\}/g, movie.imdb_id || movie.imdbId || '')
+                    .replace(/\{embed\}/g, embed)
+                    .replace(/\{episode_data\}/g, episodeData);
+            } else {
+                // Movie template
+                const posterHtml = poster ?
+                    `<img src="${poster}" alt="${movie.title}" style="max-width:100%;border-radius:8px;max-height:400px;" />` :
+                    '';
+                const embedHtml = embedUrl ?
+                    `<iframe src="${embedUrl}" referrerpolicy="origin" style="width:100%;aspect-ratio:16/9;border:0;border-radius:8px;" allowfullscreen></iframe>` :
+                    '';
+                return template
+                    .replace(/\{title\}/g, movie.title || movie.name || 'Untitled')
+                    .replace(/\{year\}/g, year)
+                    .replace(/\{description\}/g, description.replace(/\n/g, '<br>'))
+                    .replace(/\{tags\}/g, tags)
+                    .replace(/\{poster\}/g, posterHtml)
+                    .replace(/\{embed\}/g, embedHtml)
+                    .replace(/\{imdb\}/g, movie.imdb_id || movie.imdbId || '');
+            }
         }
 
+        // ═══════════════════════════════════════════════════════════════
+        //  POST TO BLOGGER
+        // ═══════════════════════════════════════════════════════════════
         async function postToBlogger(movie) {
             if (!accessToken) { throw new Error('Not signed in'); }
             if (!currentBlogId) { throw new Error('No blog selected'); }
@@ -1556,7 +1616,7 @@
         }
 
         // ═══════════════════════════════════════════════════════════════
-        //  AI CONTENT GENERATOR (template-based with variety)
+        //  AI CONTENT GENERATOR (unchanged)
         // ═══════════════════════════════════════════════════════════════
         function generateAIContent(movie) {
             const title = movie.title || movie.name || 'Untitled';
@@ -1565,7 +1625,6 @@
             const overview = movie.overview || movie.description || 'A captivating film.';
             const tags = movie.tags || (movie.genre_names ? movie.genre_names.join(', ') : '');
 
-            // Generate SEO-friendly content with variety
             const intros = [
                 `"${title}" (${year}) is a must-watch cinematic experience that captivates audiences with its compelling narrative and stunning visuals.`,
                 `Experience the magic of "${title}" (${year}), a film that masterfully blends drama, action, and emotion into an unforgettable journey.`,
@@ -1592,7 +1651,7 @@
         }
 
         // ═══════════════════════════════════════════════════════════════
-        //  TMDB API HELPERS
+        //  TMDB API HELPERS (unchanged)
         // ═══════════════════════════════════════════════════════════════
         function buildUrl(endpoint, extraParams = {}) {
             const url = new URL(TMDB_BASE + endpoint);
@@ -1701,12 +1760,10 @@
             currentPage = page;
             searchQuery = query;
 
-            // Update tabs
             categoryTabs.querySelectorAll('button').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.cat === categoryKey);
             });
 
-            // Clear selection
             selectedMovies.clear();
             updateSelectionUI();
 
@@ -1762,6 +1819,7 @@
                 const title = item.title || item.name || 'Untitled';
                 const hasEmbed = !!item.imdb_id;
                 const isSelected = selectedMovies.has(index);
+                const isSeries = item.media_type === 'tv';
 
                 return `
                     <div class="movie-card ${isSelected ? 'selected' : ''}" data-index="${index}">
@@ -1774,12 +1832,12 @@
                             <div class="badge-top">${rating !== '—' ? '⭐ ' + rating : '✦'}</div>
                             <div class="badge-year">${year}</div>
                             <div class="badge-embed ${hasEmbed ? 'available' : 'unavailable'}">${hasEmbed ? '● embed' : '○ no embed'}</div>
+                            ${isSeries ? '<div style="position:absolute;top:8px;left:50px;background:rgba(229,9,20,0.8);padding:2px 10px;border-radius:12px;font-size:10px;color:#fff;z-index:2;">📺 TV</div>' : ''}
                         </div>
                         <div class="info">
                             <div class="title">${title}</div>
                             <div class="meta">
                                 <span>${year}</span>
-                                ${item.media_type === 'tv' ? '<span>📺 TV</span>' : ''}
                                 <span class="rating">⭐ ${rating}</span>
                             </div>
                             <button class="post-btn" onclick="postSingleMovie(${index})">📝 Post this</button>
@@ -1790,7 +1848,6 @@
 
             grid.innerHTML = html;
 
-            // Attach checkbox events
             grid.querySelectorAll('.checkbox-overlay input[type="checkbox"]').forEach(cb => {
                 cb.addEventListener('change', (e) => {
                     e.stopPropagation();
@@ -1801,7 +1858,6 @@
                         selectedMovies.delete(idx);
                     }
                     updateSelectionUI();
-                    // Update card highlight
                     const card = cb.closest('.movie-card');
                     if (card) card.classList.toggle('selected', cb.checked);
                 });
@@ -1817,7 +1873,6 @@
             const count = selectedMovies.size;
             selectedCount.textContent = `${count} selected`;
             selectAllCheckbox.checked = count > 0 && count === currentMovies.length;
-            // Update checkbox states
             grid.querySelectorAll('.checkbox-overlay input[type="checkbox"]').forEach(cb => {
                 const idx = parseInt(cb.dataset.index);
                 cb.checked = selectedMovies.has(idx);
@@ -1836,7 +1891,6 @@
                 }
             });
             updateSelectionUI();
-            // Update all checkboxes and cards
             grid.querySelectorAll('.checkbox-overlay input[type="checkbox"]').forEach(cb => {
                 cb.checked = checked;
                 const card = cb.closest('.movie-card');
@@ -1876,7 +1930,6 @@
         });
 
         async function bulkPostMovies(movies) {
-            // Show progress
             bulkProgress.classList.add('show');
             progressSuccess.textContent = '0';
             progressFail.textContent = '0';
@@ -1902,7 +1955,6 @@
                     success++;
                     itemDiv.className = 'item done';
                     itemDiv.textContent = `✅ ${title} → ${result.url || 'posted'}`;
-                    // Add to history
                     addHistory({
                         title: title,
                         date: new Date().toISOString(),
@@ -1922,8 +1974,6 @@
                 progressFill.style.width = `${((success + fail) / total) * 100}%`;
                 progressLabel.textContent = `Posting ${i+1}/${total}`;
                 progressCount.textContent = `${success + fail} / ${total}`;
-
-                // Scroll to bottom of progress items
                 progressItems.scrollTop = progressItems.scrollHeight;
             }
 
@@ -1934,11 +1984,8 @@
                 showToast(`Posted ${success}/${total}. ${fail} failed.`, 'error');
             }
 
-            // Clear selection after posting
             selectedMovies.clear();
             updateSelectionUI();
-
-            // Reload history
             renderHistory();
         }
 
@@ -1951,7 +1998,6 @@
             if (!accessToken) { showToast('Sign in to Blogger first.', 'error'); return; }
             if (!currentBlogId) { showToast('Select a blog first.', 'error'); return; }
 
-            // Show progress for single
             bulkProgress.classList.add('show');
             progressLabel.textContent = `Posting: ${movie.title}`;
             progressFill.style.width = '0%';
@@ -2001,7 +2047,8 @@
             modalTitle.textContent = movie.title || movie.name || 'Untitled';
             const year = movie.year || '—';
             const rating = movie.vote_average ? movie.vote_average.toFixed(1) + '/10' : '—';
-            modalSub.innerHTML = `<span>📅 ${year}</span><span>⭐ ${rating}</span><span>${movie.media_type === 'tv' ? '📺 TV' : '🎬 Movie'}</span>`;
+            const isSeries = movie.media_type === 'tv';
+            modalSub.innerHTML = `<span>📅 ${year}</span><span>⭐ ${rating}</span><span>${isSeries ? '📺 TV' : '🎬 Movie'}</span>`;
             modalOverview.textContent = movie.overview || movie.description || 'No description available.';
 
             const posterEl = modalPoster;
@@ -2199,6 +2246,7 @@
                 return;
             }
             const sample = currentMovies[0];
+            // Force series preview if we have a TV show
             const preview = renderTemplate(sample, templateTextarea.value || postTemplate);
             const win = window.open('', '_blank', 'width=800,height=600');
             win.document.write(`
@@ -2208,7 +2256,7 @@
                     <h2>Preview: ${sample.title}</h2>
                     <hr style="border-color:#2d3a4f;">
                     ${preview}
-                    <p style="margin-top:20px;color:#64748b;font-size:12px;">This is a preview of how the post will appear on Blogger.</p>
+                    <p style="margin-top:20px;color:#64748b;font-size:12px;">${sample.media_type === 'tv' ? '🔵 This is a TV series layout (with episode data).' : '🟢 This is a movie layout.'}</p>
                     </body></html>
                 `);
             win.document.close();
@@ -2224,6 +2272,7 @@
             if (!accessToken) { showToast('Sign in to Blogger first.', 'error'); return; }
             if (!currentBlogId) { showToast('Select a blog first.', 'error'); return; }
 
+            const isSeries = manualType.value === 'tv';
             const movie = {
                 title: title,
                 year: manualYear.value || '',
@@ -2232,6 +2281,9 @@
                 poster: manualPoster.value.trim(),
                 imdbId: manualImdb.value.trim(),
                 overview: manualDesc.value.trim(),
+                media_type: isSeries ? 'tv' : 'movie',
+                type: isSeries ? 'tv' : 'movie',
+                isSeries: isSeries,
             };
 
             try {
@@ -2244,7 +2296,7 @@
                     movieId: '',
                 });
                 renderHistory();
-                showToast(`✅ "${title}" posted!`, 'success');
+                showToast(`✅ "${title}" posted as ${isSeries ? 'series' : 'movie'}!`, 'success');
                 manualForm.reset();
             } catch (err) {
                 showToast(`Error: ${err.message}`, 'error');
@@ -2258,21 +2310,18 @@
         // ═══════════════════════════════════════════════════════════════
         //  INIT
         // ═══════════════════════════════════════════════════════════════
-        // Load default category
         loadCategory('trending', 1, '');
 
-        // Init OAuth if client ID set
-        if (CLIENT_ID && CLIENT_ID !== '55046129292-15h9k5ga0lr1e3p3ptqg1iueeks49f7v.apps.googleusercontent.com') {
+        if (CLIENT_ID && CLIENT_ID !== 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com') {
             initOAuth();
         } else {
             showToast('⚠️ Set your Google Client ID in the script.', 'error');
         }
 
-        // Render history
         renderHistory();
 
-        console.log('🎬 Blogger Movie Poster Pro loaded.');
-        console.log('📋 Features: TMDB browser, multi-select, bulk post, AI content, template editor, history, manual form.');
+        console.log('🎬 Blogger Movie Poster Pro — Series Edition loaded.');
+        console.log('📺 TV series posts now include episode data JSON and lazyload iframe.');
     </script>
 </body>
 </html>
